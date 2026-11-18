@@ -9,9 +9,9 @@ LARGURA , ALTURA = 1000, 700
 AZUL = (100, 149, 237)
 PRETO = (0 , 0 , 0)
 VERDE = (0 ,100, 0)
+VERMELHO = (100,0,0)
 
 #constantes do jogo
-
 FPS = 60
 GRAVIDADE = 0.45
 VELOCIDADE_MOVIMENTO = 5
@@ -64,9 +64,13 @@ rodando = True
 #variaveis do jogo
 
 personagem1_x , personagem1_y = 10 , CHAO
+personagem2_x , personagem2_y = 100 , CHAO
 velocidade1_y = 0
+velocidade2_y = 0
 no_chao1 = True
-na_plataforma = False
+no_chao2 = True
+na_plataforma1 = False
+na_plataforma2 = False
 
 #loop do jogo
 
@@ -87,38 +91,79 @@ while rodando:
             velocidade1_y = ALTURA_DO_PULO
             no_chao1 = False
     if teclas[pygame.K_DOWN]:
-        if na_plataforma:
+        if na_plataforma1:
             personagem1_y += 2
-            na_plataforma = False
+            na_plataforma1 = False
             no_chao1 = False
+    # personagem 2 (w , s)
+    if teclas[pygame.K_w] :
+        if no_chao2 :
+            velocidade2_y = ALTURA_DO_PULO
+            no_chao2 = False
 
-    movimento_x = (
+    if teclas[pygame.K_s] :
+        if na_plataforma2 :
+            personagem2_y += 2
+            na_plataforma2 = False
+            no_chao2 = False
+    
+    movimento1_x = (
         int(teclas[pygame.K_RIGHT]) - int(teclas[pygame.K_LEFT])
     ) * VELOCIDADE_MOVIMENTO
-    personagem1_x += movimento_x
+    personagem1_x += movimento1_x
 
    
-    retangulo_personagem = pygame.Rect(
+    retangulo_personagem1 = pygame.Rect(
         personagem1_x, personagem1_y, *TAMANHO_PERSONAGENS
     )
     for obstaculo in plataformas_solidas + paredes:
-        if retangulo_personagem.colliderect(obstaculo):
-            if movimento_x > 0:
+        if retangulo_personagem1.colliderect(obstaculo):
+            if movimento1_x > 0:
                 personagem1_x = obstaculo.left - TAMANHO_PERSONAGENS[0]
-            elif movimento_x < 0:
+            elif movimento1_x < 0:
                 personagem1_x = obstaculo.right
-            retangulo_personagem.x = personagem1_x
+            retangulo_personagem1.x = personagem1_x
+    # personagem 2
+    movimento2_x = (
+        int(teclas[pygame.K_d]) - int(teclas[pygame.K_a])
+    ) * VELOCIDADE_MOVIMENTO
+    personagem2_x += movimento2_x
 
+    retangulo_personagem2 = pygame.Rect(
+         personagem2_x, personagem2_y, *TAMANHO_PERSONAGENS
+    )
+    for obstaculo in plataformas_solidas + paredes:
+            if retangulo_personagem2.colliderect(obstaculo):
+                if movimento2_x > 0:
+                    personagem2_x = obstaculo.left - TAMANHO_PERSONAGENS[0]
+                elif movimento2_x < 0:
+                    personagem2_x = obstaculo.right
+                retangulo_personagem2.x = personagem2_x
+
+    
     y_anterior1 = personagem1_y
     personagem1_y += velocidade1_y
     velocidade1_y += GRAVIDADE
     no_chao1 = False
-    na_plataforma = False
+    na_plataforma1 = False
+
+    # personagem 2 
+    y_anterior2 = personagem2_y
+    personagem2_y += velocidade2_y
+    velocidade2_y += GRAVIDADE
+    no_chao2 = False
+    na_plataforma2 = False
 
     if personagem1_y >= CHAO:
         personagem1_y = CHAO
         velocidade1_y = 0
         no_chao1 = True
+
+    # personagem 2
+    if personagem2_y >= CHAO:
+            personagem2_y = CHAO
+            velocidade2_y = 0
+            no_chao2 = True
 
     for plataforma in plataformas:
         if (
@@ -128,17 +173,31 @@ while rodando:
             and personagem1_x + TAMANHO_PERSONAGENS[0] > plataforma.left
             and personagem1_x < plataforma.right
         ):
+        
             personagem1_y = plataforma.top - TAMANHO_PERSONAGENS[1]
             velocidade1_y = 0
             no_chao1 = True
-            na_plataforma = True
+            na_plataforma1 = True
+    # personagem 2
+    for plataforma in plataformas :
+        if(
+            velocidade2_y >=0
+            and y_anterior2 + TAMANHO_PERSONAGENS[1] <= plataforma.top
+            and personagem2_y + TAMANHO_PERSONAGENS[1] > plataforma.top
+            and personagem2_x + TAMANHO_PERSONAGENS[0] > plataforma.left
+            and personagem2_x < plataforma.right
+        ) :
+            personagem2_y = plataforma.top - TAMANHO_PERSONAGENS[1]
+            velocidade2_y = 0
+            no_chao2 = True
+            na_plataforma2 = True
 
     for obstaculo in plataformas_solidas + paredes:
-        sobrepoe_horizontalmente = (
+        sobrepoe_horizontalmente1 = (
             personagem1_x + TAMANHO_PERSONAGENS[0] > obstaculo.left
             and personagem1_x < obstaculo.right
         )
-        if not sobrepoe_horizontalmente:
+        if not sobrepoe_horizontalmente1:
             continue
 
         if (
@@ -156,11 +215,33 @@ while rodando:
         ):
             personagem1_y = obstaculo.bottom
             velocidade1_y = 0
-            
-    
-    
+
+        # personagem 2
+    for obstaculo in plataformas_solidas + paredes :
+        sobrepoe_horizontalmente2 = (
+            personagem2_x  + TAMANHO_PERSONAGENS[0] > obstaculo.left
+            and personagem2_x < obstaculo.right
+        )   
+        if not sobrepoe_horizontalmente2 :
+            continue
+        if (
+            velocidade2_y >= 0
+            and y_anterior2 + TAMANHO_PERSONAGENS[1] <= obstaculo.top
+            and personagem2_y + TAMANHO_PERSONAGENS[1] >= obstaculo.top
+        ):
+            personagem2_y = obstaculo.top - TAMANHO_PERSONAGENS[1]
+            velocidade2_y = 0
+            no_chao2 = True
+        elif (
+            velocidade2_y < 0
+            and y_anterior2 >= obstaculo.bottom
+            and personagem2_y <= obstaculo.bottom
+        ):
+            personagem2_y = obstaculo.bottom
+            velocidade2_y =0
 
     pygame.draw.rect(tela,PRETO, (personagem1_x, personagem1_y, *TAMANHO_PERSONAGENS))
+    pygame.draw.rect(tela,VERMELHO, (personagem2_x, personagem2_y, *TAMANHO_PERSONAGENS))
     pygame.draw.rect(tela, VERDE, (0, TOPO_CHAO, LARGURA, ALTURA_DO_CHAO))
     for plataforma in plataformas:
         pygame.draw.rect(tela, PRETO, plataforma)
